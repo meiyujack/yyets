@@ -10,11 +10,12 @@ class Schedule:
         p.start()
 
     def geted2k(self):
-        print('开始执行info。{}'.format(ctime()))
+        # print('开始执行info。{}'.format(ctime()))
         data = yyets.getMovieInfo()
         yyets.insertTable(data)
-        print('开始执行ed2k。{}'.format(ctime()))
+        # print('开始执行ed2k。{}'.format(ctime()))
         keyURL = yyets.getKeyURL(yyets.id)
+        print(keyURL)
         ed2kURL = yyets.getDownloadURL(keyURL)
         print('《{0}》电影地址为：\n{1}'.format(yyets.name, ed2kURL))
         data = dict(zip(('movieID', 'name', 'originalName'), (yyets.id, yyets.name, yyets.originalName)))

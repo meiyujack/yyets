@@ -9,12 +9,14 @@ from selenium.common.exceptions import TimeoutException
 from urllib.parse import unquote
 
 chrome_options = Options()
-chrome_options.add_argument('--headless')
+# chrome_options.add_argument('--headless')
+prefs={"profile.managed_default_content_settings.images":2}
+chrome_options.add_experimental_option("prefs",prefs)
 # SERVICE_ARGS=['--load-images=false','--disk-cache=true']
 
 EMAIL='meiyujack@msn.cn'
 PASSWORD='013301227'
-WEBSITE='http://www.zimuzu.io'
+WEBSITE='http://www.zmz2019.com'
 
 class YYETS:
 
@@ -28,7 +30,7 @@ class YYETS:
         self.id=''
         self.name=''
         self.originalName=''
-        self.ch_browser=webdriver.Chrome(chrome_options=chrome_options)
+        # self.ch_browser=webdriver.Chrome()
 
     def getPage(self,url,encoding='utf-8'):
         try:
@@ -210,18 +212,20 @@ class YYETS:
         movieURL=self.universalURL+url
         chrome=webdriver.Chrome(chrome_options=chrome_options)
         chrome.get(movieURL)
-        self.ch_browser.get(movieURL)
-        wait=WebDriverWait(self.ch_browser,12)
+        # self.ch_browser.get(movieURL)
+        wait=WebDriverWait(chrome,12)
         loginButton=wait.until(EC.element_to_be_clickable((By.XPATH,'//div[@class="u"]/a')))
         loginButton.click()
+        chrome.switch_to.window(chrome.window_handles[0])
         email=wait.until(EC.presence_of_element_located((By.NAME,'email')))
-        password=self.ch_browser.find_element_by_name('password')
+        password=chrome.find_element_by_name('password')
         email.send_keys(EMAIL)
         password.send_keys(PASSWORD)
-        loginButton=self.ch_browser.find_element_by_id('login')
+        chrome.execute_script("document.getElementsByClassName('float_middel_ad_bk')[0].style.display='None'")
+        loginButton=chrome.find_element_by_id('login')
         loginButton.click()
         try:
-            a=wait.until(EC.element_to_be_clickable((By.XPATH,'//div[@class="resource-box"]//a')))
+            a=wait.until(EC.element_to_be_clickable((By.XPATH,'//div[@id="resource-box"]//a')))
             KeyURL = a.get_attribute('href')
             return KeyURL
         except TimeoutException:
