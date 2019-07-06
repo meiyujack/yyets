@@ -14,8 +14,8 @@ prefs={"profile.managed_default_content_settings.images":2}
 chrome_options.add_experimental_option("prefs",prefs)
 # SERVICE_ARGS=['--load-images=false','--disk-cache=true']
 
-EMAIL='meiyujack@msn.cn'
-PASSWORD='013301227'
+EMAIL='your email'
+PASSWORD='your password'
 WEBSITE='http://www.zmz2019.com'
 API_WEBSITE='http://got001.com/api/v1/static/resource/detail?'
 
