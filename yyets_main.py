@@ -14,9 +14,10 @@ class Schedule:
         data = yyets.getMovieInfo()
         yyets.insertTable(data)
         # print('开始执行ed2k。{}'.format(ctime()))
-        keyURL = yyets.getKeyURL(yyets.id)
-        print(keyURL)
-        ed2kURL = yyets.getDownloadURL(keyURL)
+        keyAPI = yyets.getKeyAPI(yyets.id)
+        # print(keyAPI)
+        ed2kURL = yyets.getDownloadURL(keyAPI)
+        # print(ed2kURL)
         print('《{0}》电影地址为：\n{1}'.format(yyets.name, ed2kURL))
         data = dict(zip(('movieID', 'name', 'originalName'), (yyets.id, yyets.name, yyets.originalName)))
         data.update(ed2k=ed2kURL)
@@ -48,7 +49,7 @@ class Schedule:
                             cursor = yyets.selectTable('movieinfo', 'movieID', row[0])
                             inforow = cursor.fetchone()
                             t = ['名称', '原名', '地区', '语言', '首播', '类型', 'IMDB', '导演', '主演', '内容介绍']
-                            tell = [inforow[1], inforow[3], inforow[4], inforow[5], inforow[6], inforow[8], inforow[9],
+                            tell = [inforow[1], inforow[2], inforow[4], inforow[5], inforow[6], inforow[8], inforow[9],
                                     inforow[12], inforow[13], inforow[14]]
                             for i in range(10):
                                 print(t[i] + '：' + tell[i])

@@ -6,10 +6,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-from urllib.parse import unquote
+from urllib.parse import unquote,urlsplit
 
 chrome_options = Options()
-# chrome_options.add_argument('--headless')
+chrome_options.add_argument('--headless')
 prefs={"profile.managed_default_content_settings.images":2}
 chrome_options.add_experimental_option("prefs",prefs)
 # SERVICE_ARGS=['--load-images=false','--disk-cache=true']
@@ -17,6 +17,7 @@ chrome_options.add_experimental_option("prefs",prefs)
 EMAIL='your email'
 PASSWORD='your password'
 WEBSITE='http://www.zmz2019.com'
+API_WEBSITE='http://got001.com/api/v1/static/resource/detail?'
 
 class YYETS:
 
@@ -207,7 +208,7 @@ class YYETS:
         #     db.rollback()
         db.close()
 
-    def getKeyURL(self,url):
+    def getKeyAPI(self,url):
         print('请等待……')
         movieURL=self.universalURL+url
         chrome=webdriver.Chrome(chrome_options=chrome_options)
@@ -221,38 +222,49 @@ class YYETS:
         password=chrome.find_element_by_name('password')
         email.send_keys(EMAIL)
         password.send_keys(PASSWORD)
-        chrome.execute_script("document.getElementsByClassName('float_middel_ad_bk')[0].style.display='None'")
+        # chrome.execute_script("document.getElementsByClassName('float_middel_ad_bk')[0].style.display='None'")
         loginButton=chrome.find_element_by_id('login')
         loginButton.click()
         try:
             a=wait.until(EC.element_to_be_clickable((By.XPATH,'//div[@id="resource-box"]//a')))
             KeyURL = a.get_attribute('href')
-            return KeyURL
+            KeyAPI=API_WEBSITE+urlsplit(KeyURL).query
+            return KeyAPI
         except TimeoutException:
             print('超时，没有找到下载链接')
 
     def getDownloadURL(self,keyURL):
-        resources=self.getPage(keyURL)
-        names=resources.xpath('//div[@id="tab-g1-HR-HDTV"]//li//span[@class="filename"]/text()')
-        ed2ks=resources.xpath('//div[@id="tab-g1-HR-HDTV"]//li/ul[@class="down-links"]//li[2]/a/@href')
-        if names==[]:
-            names=resources.xpath('//div[@id="tab-g1-MP4"]//li//span[@class="filename"]/text()')
-            ed2ks=resources.xpath('//div[@id="tab-g1-MP4"]//li/ul[@class="down-links"]//li[2]/a/@href')
-        if len(names)>1:
-            while True:
-                for name in names:
-                    c=names.index(name)+1
-                    n=len(names)-c
-                    tip = '，还有{0}个'.format(n)
-                    if n==0:
-                        tip=''
-                    key=input('请确认是此链接(y确定，n继续查找)，{0}{1}：'.format(unquote(name),tip))
-                    if key=='y':
-                        return  unquote(ed2ks[names.index(name)])
-                    if key=='n':
-                        continue
-        else:
-            return unquote(self.getStr(ed2ks))
+        raw=requests.get(keyURL)
+        data=json.loads(raw.text)
+        if data.get('data').get('list'):
+            list=data['data']['list'][0]
+            if list.get('items').get('HR-HDTV'):
+                item=list['items']['HR-HDTV'][0]
+            else:
+                list.get('items').get('WEB-1080P')
+                item = list['items']['WEB-1080P'][0]
+            return unquote(item['files'][0]['address'])
+        # resources=self.getPage(keyURL)
+        # names=resources.xpath('//div[@id="tab-g0-HR-HDTV"]//span[@class="filename"]/text()')
+        # ed2ks=resources.xpath('//div[@id="tab-g0-HR-HDTV"]//ul[@class="down-links"]//li[1]/a/@href')
+        # if names==[]:
+        #     names=resources.xpath('//div[@id="tab-g1-MP4"]//li//span[@class="filename"]/text()')
+        #     ed2ks=resources.xpath('//div[@id="tab-g1-MP4"]//li/ul[@class="down-links"]//li[2]/a/@href')
+        # if len(names)>1:
+        #     while True:
+        #         for name in names:
+        #             c=names.index(name)+1
+        #             n=len(names)-c
+        #             tip = '，还有{0}个'.format(n)
+        #             if n==0:
+        #                 tip=''
+        #             key=input('请确认是此链接(y确定，n继续查找)，{0}{1}：'.format(unquote(name),tip))
+        #             if key=='y':
+        #                 return  unquote(ed2ks[names.index(name)])
+        #             if key=='n':
+        #                 continue
+        # else:
+        #     return unquote(self.getStr(ed2ks))
 
     def selectTable(self,table,key,arg):
         sql = 'select * from {table} where {key} like %s'.format(table=table,key=key)
