@@ -6,18 +6,27 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+
 from urllib.parse import unquote,urlsplit
+from os import environ as en
 
 chrome_options = Options()
 chrome_options.add_argument('--headless')
-prefs={"profile.managed_default_content_settings.images":2}
-chrome_options.add_experimental_option("prefs",prefs)
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--disable-features=NetworkService")
+chrome_options.add_argument("--window-size=1920x1080")
+chrome_options.add_argument("--disable-features=VizDisplayCompositor")
+
+# prefs={"profile.managed_default_content_settings.images":2}
+# chrome_options.add_experimental_option("prefs",prefs)
 # SERVICE_ARGS=['--load-images=false','--disk-cache=true']
 
-EMAIL='meiyujack@msn.cn'
-PASSWORD='013301227'
-WEBSITE='http://www.zmz2019.com'
-API_WEBSITE='http://got001.com/api/v1/static/resource/detail?'
+EMAIL=en.get('EMAIL')
+PASSWORD=en.get('PASSWORD')
+WEBSITE='http://www.rrys2019.com'
+API_WEBSITE='http://got002.com/resource.html?'
 
 class YYETS:
 
@@ -199,6 +208,7 @@ class YYETS:
                 print('插入电影《{0}》信息成功！'.format(self.name))
             if table=='getmovie':
                 print('插入电影《{0}》下载地址成功！'.format(self.name))
+
             db.commit()
         # except:
         #     if table=='movieinfo':
@@ -215,35 +225,80 @@ class YYETS:
         chrome.get(movieURL)
         # self.ch_browser.get(movieURL)
         wait=WebDriverWait(chrome,12)
+
         loginButton=wait.until(EC.element_to_be_clickable((By.XPATH,'//div[@class="u"]/a')))
         loginButton.click()
         chrome.switch_to.window(chrome.window_handles[0])
+        # chrome.execute_script("document.getElementsByClassName('float_middel_ad_bk')[0].style.display='None'")
+        # chrome.execute_script("document.getElementById('float_ad').style.display='None'")
         email=wait.until(EC.presence_of_element_located((By.NAME,'email')))
         password=chrome.find_element_by_name('password')
         email.send_keys(EMAIL)
         password.send_keys(PASSWORD)
-        # chrome.execute_script("document.getElementsByClassName('float_middel_ad_bk')[0].style.display='None'")
         loginButton=chrome.find_element_by_id('login')
         loginButton.click()
         try:
             a=wait.until(EC.element_to_be_clickable((By.XPATH,'//div[@id="resource-box"]//a')))
             KeyURL = a.get_attribute('href')
             KeyAPI=API_WEBSITE+urlsplit(KeyURL).query
-            return KeyAPI
+            return (chrome,KeyAPI)
         except TimeoutException:
             print('超时，没有找到下载链接')
 
-    def getDownloadURL(self,keyURL):
-        raw=requests.get(keyURL)
-        data=json.loads(raw.text)
-        if data.get('data').get('list'):
-            list=data['data']['list'][0]
-            if list.get('items').get('HR-HDTV'):
-                item=list['items']['HR-HDTV'][0]
-            else:
-                list.get('items').get('WEB-1080P')
-                item = list['items']['WEB-1080P'][0]
-            return unquote(item['files'][0]['address'])
+    def getDownloadURL(self,result):
+        chrome=result[0]
+        chrome.get(result[1])
+        lis=chrome.find_elements_by_xpath('//div[@id="sidetab-0"]//li[@role="presentation"]')
+        for li in lis:
+            if li.text=="HR-HDTV中字":
+                li.click()
+                break
+            elif li.text=="MP4中字":
+                li.click()
+                break
+            elif "1080P" in li.text:
+                li.click()
+                break
+        names = chrome.find_elements_by_xpath('//span[@class="filename"]')
+        links = chrome.find_elements_by_xpath('//a[@way="1"]')
+        if len(links) > 1:
+            while True:
+                for link in links:
+                    c=links.index(link)+1
+                    n=len(links)-c
+                    tip = '，还有{0}个'.format(n)
+                    if n==0:
+                        tip=''
+                    key=input('请确认是此链接(y确定，n继续查找)，{0}{1}：'.format(names[c-1].text,tip))
+                    if key=='y':
+                        return  unquote(link.get_attribute('href'))
+                    if key=='n':
+                        continue
+        else:
+            return unquote(links[0].get_attribute('href'))
+        # raw=requests.get(keyURL)
+        # data=json.loads(raw.text)
+        # list=data['data']['list']
+        # if len(list)!=0:
+        #     infos=list[0]
+        #     items=infos.get('items')
+        #     if items.get('HR-HDTV'):
+        #         item=infos['items']['HR-HDTV'][0]
+        #     elif items.get('MP4'):
+        #         # n=len(items.get('MP4'))
+        #         # if n>1:
+        #         #     lists=infos['items']['MP4']
+        #         #     for l in range(n):
+        #         #         print(lists[l]['files'][0]['address'])
+        #         item = infos['items']['MP4'][0]
+        #     elif items.get('1080P'):
+        #         item = infos['items']['1080P'][0]
+        #     else:
+        #         item = infos['items']['720P'][0]
+        #     return unquote(item['files'][0]['address'])
+        # else:
+        #     print('不好意思，《%s》当前没有任何下载地址'%(self.name))
+        #     return 'The address is empty.'
         # resources=self.getPage(keyURL)
         # names=resources.xpath('//div[@id="tab-g0-HR-HDTV"]//span[@class="filename"]/text()')
         # ed2ks=resources.xpath('//div[@id="tab-g0-HR-HDTV"]//ul[@class="down-links"]//li[1]/a/@href')

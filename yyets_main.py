@@ -14,13 +14,11 @@ class Schedule:
         data = yyets.getMovieInfo()
         yyets.insertTable(data)
         # print('开始执行ed2k。{}'.format(ctime()))
-        keyAPI = yyets.getKeyAPI(yyets.id)
-        # print(keyAPI)
-        ed2kURL = yyets.getDownloadURL(keyAPI)
-        # print(ed2kURL)
-        print('《{0}》电影地址为：\n{1}'.format(yyets.name, ed2kURL))
+        result = yyets.getKeyAPI(yyets.id)
+        link=yyets.getDownloadURL(result)
+        print('《{0}》电影地址为：\n{1}'.format(yyets.name, link))
         data = dict(zip(('movieID', 'name', 'originalName'), (yyets.id, yyets.name, yyets.originalName)))
-        data.update(ed2k=ed2kURL)
+        data.update(ed2k=link)
         yyets.insertTable(data, table='getmovie')
 
     def main(self):
