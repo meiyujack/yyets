@@ -1,4 +1,4 @@
-import requests,re,pymysql,sys,json
+import requests,re,pymysql,sys
 from lxml import etree
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
