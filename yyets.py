@@ -11,7 +11,6 @@ from urllib.parse import unquote,urlsplit
 from os import environ as en
 
 chrome_options = Options()
-chrome_options.add_argument("--ignore-ssl-error")
 chrome_options.add_argument('--headless')
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument("--disable-dev-shm-usage")
